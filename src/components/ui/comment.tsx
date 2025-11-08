@@ -10,20 +10,18 @@ import { getCountReaction, getReactionByUserID } from "@/hooks/useFetchData";
 import { AiFillLike } from "react-icons/ai";
 import { BiSolidDislike } from "react-icons/bi";
 import AudioPlayer from "./audioPlayer"
-
+import { useSession } from "next-auth/react"
 
 export default function CommentCard({ firstname, lastname, comment, time, commentID, type, userid, postID, audioUrl }: { firstname: string; lastname: string; comment: string, time: string,  commentID: string, type:string, userid:string, postID:string, audioUrl:string }) {
   
 
-  const [userID, setUserID] = useState<string|null>(null);
+ 
   const[countLike, setCountLike] = useState(0);
   const[countDislike, setCountDislike] = useState(0);
-  const[countReaction, setCountReaction] = useState<string>("");
+  const[userReaction, setUserReaction] = useState<any>(null);
   const[reaction, setReaction] = useState<string|unknown>("");
-
-    useEffect(() => {
-      setUserID(localStorage.getItem('userID'));
-    },[])
+  const { data: session } = useSession();
+  const userID = session?.user?.id || null;
   useEffect(() => {
     const fetchData = async () => {
    
@@ -34,7 +32,7 @@ export default function CommentCard({ firstname, lastname, comment, time, commen
         setCountDislike(DisLikes);
         if(userID){
           const react = await getReactionByUserID(commentID,userID);
-          setCountReaction(react);
+          setUserReaction(react);
           if(react!==null){
             setReaction(react.reactionType)
           }
@@ -42,22 +40,18 @@ export default function CommentCard({ firstname, lastname, comment, time, commen
       
     }
     fetchData()
-    }, [reaction, commentID, userID]);
+    }, [commentID, userID]);
 
    
 
     
-    // Example usage:
-   
-    
-   // Output will depend on the current date and time
-   
+ 
 
      
         const handleReaction = async (type:string) => {
           setReaction(type);
           let result = [];
-          await fetch('http://localhost:3000/api/graphql', {
+          await fetch(process.env.NEXT_PUBLIC_GRAPHQL_URL || '/api/graphql', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -66,8 +60,8 @@ export default function CommentCard({ firstname, lastname, comment, time, commen
                 query: `
                     mutation {
                             addNotification(
-                            recipientID: "${userID}",
-                            initiatorID:"${userid}", 
+                            recipientID: "${userid}",
+                            initiatorID:"${userID}", 
                             postID: "${postID}", 
                             description:"Reacted to your Comment",
                             is_seen:false
@@ -86,8 +80,8 @@ export default function CommentCard({ firstname, lastname, comment, time, commen
                 `,
             }),
         });
-          if(countReaction==null){
-            const addReaction = await fetch('http://localhost:3000/api/graphql', {
+          if(userReaction==null){
+            const addReaction = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_URL || '/api/graphql', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -116,18 +110,18 @@ export default function CommentCard({ firstname, lastname, comment, time, commen
            
           }
           else{
-            const updateReaction = await fetch('http://localhost:3000/api/graphql', {
+           const updateReaction = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_URL || '/api/graphql', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
               },
               body: JSON.stringify({
                   query: `
-                      mutation {
+                      mutation UpdateReaction($userID: ID!, $commentID: ID!, $reactionType: String!) {
                           updateReaction(
-                              userID: "${userID}", 
-                              commentID: "${commentID}", 
-                              reactionType: "${type}",
+                              userID: $userID, 
+                              commentID: $commentID, 
+                              reactionType: $reactionType,
                           
                           
                           ) {
@@ -139,6 +133,11 @@ export default function CommentCard({ firstname, lastname, comment, time, commen
                           }
                       }
                   `,
+                   variables: {
+                   userID,
+                   commentID,
+                   reactionType: type
+                 }
               }),
           });
            result = await updateReaction.json();
@@ -169,7 +168,8 @@ export default function CommentCard({ firstname, lastname, comment, time, commen
               <div className="flex items-center space-x-2 mt-2 text-white">
               
                   {
-                  reaction==="LIKE"?<AiFillLike className={`mr-1 h-4 w-4 `}/>:<ThumbsUp className={`mr-1 h-4 w-4 `} onClick = {()=>handleReaction("LIKE")}/>
+                   reaction==="LIKE"?<AiFillLike className={`mr-1 h-4 w-4 cursor-pointer`} onClick = {()=>handleReaction("LIKE")}/>:<ThumbsUp className={`mr-1 h-4 w-4 cursor-pointer`} onClick = {()=>handleReaction("LIKE")}/>
+                    
                     
                   }
                   <span>{countLike}</span>
@@ -178,7 +178,8 @@ export default function CommentCard({ firstname, lastname, comment, time, commen
                  
                   {
 
-                  reaction==="DISLIKE"?<BiSolidDislike className={`mr-1 h-4 w-4 `}/>:<ThumbsDown className={`mr-1 h-4 w-4`}  onClick = {()=>handleReaction("DISLIKE")}/>
+                  reaction==="DISLIKE"?<BiSolidDislike className={`mr-1 h-4 w-4 cursor-pointer`} onClick = {()=>handleReaction("DISLIKE")}/>:<ThumbsDown className={`mr-1 h-4 w-4 cursor-pointer`}  onClick = {()=>handleReaction("DISLIKE")}/>
+                  
                   
                   }
                   <span>{countDislike}</span>

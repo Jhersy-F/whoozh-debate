@@ -91,6 +91,13 @@ export default function AddComment({postID,userid}:{postID:string,userid:string}
           body: JSON.stringify({
               query: `
                   mutation {
+                  mutation AddComment(
+                      $userID: ID, 
+                      $postID: ID!, 
+                      $comment: String!, 
+                      $type: String,
+                      $audioUrl: String
+                  ) {
                       addComment(
                           userID: "${userID}", 
                           postID: "${postID}", 
@@ -98,6 +105,11 @@ export default function AddComment({postID,userid}:{postID:string,userid:string}
                           type: "${choice}",
                           audioUrl: "${audioUrl}"
                       
+                          userID: $userID, 
+                          postID: $postID, 
+                          comment: $comment, 
+                          type: $type,
+                          audioUrl: $audioUrl
                       ) {
                           id
                           userID
@@ -108,6 +120,13 @@ export default function AddComment({postID,userid}:{postID:string,userid:string}
                       }
                   }
               `,
+              variables: {
+                userID,
+                postID,
+                comment: text,
+                type: choice,
+                audioUrl
+              }
           }),
       });
        const result = await addComment.json();
@@ -141,9 +160,32 @@ export default function AddComment({postID,userid}:{postID:string,userid:string}
                         is_seen
                         
                     }
+                mutation AddNotification(
+                    $recipientID: ID,
+                    $initiatorID: ID!,
+                    $postID: ID!,
+                    $description: String!,
+                    $is_seen: Boolean!
+                ) {
+                    addNotification(
+                    recipientID: $recipientID,
+                    initiatorID: $initiatorID, 
+                    postID: $postID, 
+                    description: $description,
+                    is_seen: $is_seen
+                 ) {
+                    id
                   }
                 
+                }
             `,
+            variables: {
+                recipientID: userID,
+                initiatorID: userid,
+                postID: postID,
+                description: "Commented to your Debate",
+                is_seen: false
+            }
         }),
     });
 

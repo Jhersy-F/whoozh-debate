@@ -164,10 +164,9 @@ const Nav = () => {
           }`}
           >
           <div className="flex flex-col items-stretch py-4">
-            <NavLink href="/pagess/homepage" icon={<Home className="w-6 h-6 mr-2" />} text="Home" mobileJustify onClick={toggleMenu} />
+            <NavLink href="/pages/homepage" icon={<Home className="w-6 h-6 mr-2" />} text="Home" mobileJustify onClick={toggleMenu} />
             <NavLink href="/pages/profile" icon={<User className="w-6 h-6 mr-2" />} text="Profile" mobileJustify onClick={toggleMenu} />
-            <NavLink href="/yourdebate" icon={<Bookmark className="w-6 h-6 mr-2" />} text="Bookmarks" mobileJustify onClick={toggleMenu} />
-           
+            <NavLink href="/pages/yourdebate" icon={<Bookmark className="w-6 h-6 mr-2" />} text="Bookmarks" mobileJustify onClick={toggleMenu} />           
             <div className='flex items-center transition-colors cursor-pointer justify-between px-4 py-2 border-b border-gray-700 last:border-b-0 ' onClick={()=>setIsNotifOpen(!isNotifOpen)}>
               <div className="flex items-center hover:text-teal-500 ">
                 <div className="relative mr-2">

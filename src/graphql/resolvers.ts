@@ -28,8 +28,39 @@ interface LikeFilter {
 
 const resolvers = {
   Query: {
-    getUsers: async () => {
-      return await User.find(); 
+    getUsers: async (_: undefined, { page = 1, limit = 20 }: { page?: number; limit?: number }) => {
+      try {
+        // Validate and clamp pagination parameters
+        const validatedPage = Math.max(1, Math.floor(page));
+        const maxLimit = 100; // Maximum items per page
+        const validatedLimit = Math.max(1, Math.min(Math.floor(limit), maxLimit));
+
+        // Calculate skip value for pagination
+        const skip = (validatedPage - 1) * validatedLimit;
+
+        // Fetch users with pagination
+        const [users, totalCount] = await Promise.all([
+          User.find().skip(skip).limit(validatedLimit),
+          User.countDocuments()
+        ]);
+
+        // Calculate pagination metadata
+        const totalPages = Math.ceil(totalCount / validatedLimit);
+        const hasNextPage = validatedPage < totalPages;
+        const hasPreviousPage = validatedPage > 1;
+
+        return {
+          users,
+          totalCount,
+          page: validatedPage,
+          limit: validatedLimit,
+          totalPages,
+          hasNextPage,
+          hasPreviousPage
+        };
+      } catch (error) {
+        throw new ApolloError('Error fetching users', 'USERS_FETCH_ERROR', { error });
+      }
     },
  
     getUserByID: async (_: undefined, { id }: { id: string }) => {
@@ -52,7 +83,7 @@ const resolvers = {
         const account = await Account.findOne({userID}).populate('userID'); // Assuming you're using Mongoose
         if (!account) {
           console.log(userID)
-          throw new UserInputError('User  not found', {
+          throw new UserInputError('Account  not found', {
             invalidArgs: { userID },
           });
         }
@@ -130,9 +161,38 @@ const resolvers = {
   },
   searchPostsByContent: async (_: undefined, { content }: { content: string }) => {
     try {
+      // Validate input
+      if (!content || typeof content !== 'string') {
+        throw new UserInputError('Search content must be a non-empty string');
+      }
+
+      // Prevent overly long search patterns (max 200 characters)
+      const maxPatternLength = 200;
+      if (content.length > maxPatternLength) {
+        throw new UserInputError(`Search pattern too long (max ${maxPatternLength} characters)`);
+      }
+
+      // Sanitize input by escaping regex metacharacters to prevent ReDoS
+      const escapeRegex = (str: string): string => {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      };
+
+      const sanitizedContent = escapeRegex(content.trim());
+
+      // Validate that sanitized content is not empty after trimming
+      if (!sanitizedContent) {
+        throw new UserInputError('Search content cannot be empty');
+      }
+
+      // Maximum number of results to prevent unbounded result sets
+      const maxResults = 50;
+
+      // Perform search with validated and sanitized input, and result limit
       const posts = await Post.find({
-        content: { $regex: content, $options: 'i' }, // 'i' makes it case-insensitive
-      }).populate('userID');
+        content: { $regex: sanitizedContent, $options: 'i' }, 
+      })
+        .limit(maxResults)
+        .populate('userID');
 
       return posts.map((post) => ({
         id: post._id,
@@ -145,7 +205,13 @@ const resolvers = {
         user: post.userID,
       }));
     } catch (error) {
-      throw new ApolloError('Error searching posts', 'POST_SEARCH_ERROR', { error });
+      // Handle invalid regex construction or other errors
+      if (error instanceof UserInputError) {
+        throw error;
+      }
+      throw new ApolloError('Error searching posts', 'POST_SEARCH_ERROR', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   },
   countChoice: async (_: undefined, { choice,postID }:{choice: string, postID: string}) => {
@@ -226,7 +292,7 @@ const resolvers = {
       return count;
     }
     catch (error) {
-      throw new ApolloError('error joined','FETCH_ERROR',{
+      throw new ApolloError('error counting joined','JOINED_COUNT_ERROR',{
         error
       });
   }},
@@ -240,9 +306,9 @@ const resolvers = {
       return count;
     }
     catch (error) {
-      throw new ApolloError('error joined','FETCH_ERROR',{
-        error
-      });
+      throw new ApolloError('Error counting reactions','REACTION_COUNT_ERROR',{
+         error
+       });
   }},
   getReactionByUserID: async (_: undefined, { commentID,userID }:{commentID: string, userID: string}) => {
     try{
@@ -255,11 +321,10 @@ const resolvers = {
       return reaction;
     }
     catch (error) {
-      throw new ApolloError('error joined','FETCH_ERROR',{
+      throw new ApolloError('Error fetching reaction','REACTION_FETCH_ERROR',{
         error
       });
-  }},
-  getCommentByPostID: async (_: undefined, { postID, type }: { postID: string, type: string }) => {
+  }},  getCommentByPostID: async (_: undefined, { postID, type }: { postID: string, type: string }) => {
     try {
       const comment = await Comment.find({postID:postID, type:type}).populate('userID'); // Assuming you're using Mongoose
       if (!comment) {
@@ -291,15 +356,15 @@ const resolvers = {
   },
   getReplyByCommentID: async (_: undefined, { id }: { id: string }) => {
     try {
-      const user = Reply.findById(id); // Assuming you're using Mongoose
-      if (!user) {
-        throw new UserInputError('User  not found', {
+      const reply = Reply.findById(id); // Assuming you're using Mongoose
+      if (!reply) {
+        throw new UserInputError('Reply  not found', {
           invalidArgs: { id },
         });
       }
-      return user;
+      return reply;
     } catch (error) {
-      throw new ApolloError('Error fetching user', 'USER_FETCH_ERROR', { error });
+      throw new ApolloError('Error fetching Reply', 'USER_FETCH_ERROR', { error });
     }
   },
 
@@ -316,10 +381,9 @@ const resolvers = {
       }
       return joined;
     } catch (error) {
-      throw new ApolloError('Error fetching Joined', 'USER_FETCH_ERROR', { error });
+      throw new ApolloError('Error fetching Joined', 'JOINED_FETCH_ERROR', { error });
     }
-  },
-  getAllJoinedByUserID: async (_: undefined, { userID }: { userID: string}) => {
+  },  getAllJoinedByUserID: async (_: undefined, { userID }: { userID: string}) => {
     try {
       const objectUserID = new ObjectId(userID);
       const joined = await Joined.find({userID:objectUserID}).populate({
@@ -363,15 +427,14 @@ const resolvers = {
 
 
     } catch (error) {
-      throw new ApolloError('Error fetching Joined', 'USER_FETCH_ERROR', { error });
+      throw new ApolloError('Error fetching Joined', 'JOINED_FETCH_ERROR', { error });
     }
-  },
-  getPostByUserID: async (_: undefined, { userID }: { userID: string }) => {
+  },  getPostByUserID: async (_: undefined, { userID }: { userID: string }) => {
     try {
       const objectUserID = new ObjectId(userID);
       const post = await Post.find({userID:objectUserID}).populate('userID'); // Assuming you're using Mongoose
       if (!post) {
-        throw new UserInputError('Joined  not found', {
+        throw new UserInputError('Posts   not found', {
           invalidArgs: { userID },
         });
       }
@@ -396,7 +459,7 @@ const resolvers = {
       
 
     } catch (error) {
-      throw new ApolloError('Error fetching Joined', 'USER_FETCH_ERROR', { error });
+      throw new ApolloError('Error fetching posts', 'USER_FETCH_ERROR', { error });
     }
   },
   getNotificationByUser: async (_: undefined, { userID }: { userID: string }) => {
@@ -550,7 +613,7 @@ const resolvers = {
       
               return newAccount;
             } catch (error) {
-              throw new ApolloError('Error fetching user', 'USER_FETCH_ERROR', { error });
+              throw new ApolloError('Error fetching user', 'ACCOUNT_CREATE_ERROR', { error });
             
             }
        
@@ -607,7 +670,7 @@ const resolvers = {
             return newComment;
           }
           catch(error){
-            throw new ApolloError('Error fetching user', 'USER_FETCH_ERROR',{error});
+            throw new ApolloError('Error fetching user', 'CHOICE_CREATE_ERROR',{error});
           }
              
     },
@@ -686,7 +749,7 @@ const resolvers = {
               await newJoined.save();
               return newJoined;
             } catch (error) {
-              throw new ApolloError('Error fetching user', 'USER_FETCH_ERROR', { error });
+              throw new ApolloError('Error fetching user', 'JOINED_CREATE_ERROR', { error });
             
             }
      
@@ -723,7 +786,7 @@ const resolvers = {
           try {
             // Validate userID format
               if (!commentID || typeof commentID !== 'string' || commentID.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(commentID)) {
-                throw new ApolloError('Invalid postID format. It must be a 24-character hexadecimal string.', 'INVALID_POST_ID');
+                throw new ApolloError('Invalid postID format. It must be a 24-character hexadecimal string.', 'INVALID_COMMENT_ID');
             }
             if (!userID || typeof userID !== 'string' || userID.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(userID)) {
               throw new ApolloError('Invalid userID format. It must be a 24-character hexadecimal string.', 'INVALID_USER_ID');
@@ -742,7 +805,7 @@ const resolvers = {
           
               return newReaction;
             } catch (error) {
-              throw new ApolloError('Error fetching user', 'USER_FETCH_ERROR', { error });
+              throw new ApolloError('Error fetching Reaction', 'REACTION_FETCH_ERROR', { error });
             
             }
      
@@ -866,10 +929,9 @@ const resolvers = {
         );
         return user;
       } catch (error) {
-        throw new ApolloError('Error updating reaction', 'REACTION_UPDATE_ERROR', { error });
+        throw new ApolloError('Error updating photo', 'PHOTO_UPDATE_ERROR', { error });
       }
-    },
-    addNotification: async(_: undefined, 
+    },    addNotification: async(_: undefined, 
       {
         recipientID,
         initiatorID, 
@@ -888,10 +950,10 @@ const resolvers = {
           try {
             // Validate userID format
               if (!recipientID || typeof recipientID !== 'string' || recipientID.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(recipientID)) {
-                throw new ApolloError('Invalid postID format. It must be a 24-character hexadecimal string.', 'INVALID_POST_ID');
+                throw new ApolloError('Invalid recipientID format. It must be a 24-character hexadecimal string.', 'INVALID_RECIPIENT_ID');
             }
             if (!initiatorID || typeof initiatorID !== 'string' || initiatorID.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(initiatorID)) {
-              throw new ApolloError('Invalid userID format. It must be a 24-character hexadecimal string.', 'INVALID_USER_ID');
+              throw new ApolloError('Invalid initiatorID format. It must be a 24-character hexadecimal string.', 'INVALID_INITIATOR_ID');
           }
              const objectrecipientID = new ObjectId(recipientID);
              const objectinitiatorID = new ObjectId(initiatorID);
@@ -937,10 +999,9 @@ const resolvers = {
         );
         return notif;
       } catch (error) {
-        throw new ApolloError('Error updating reaction', 'REACTION_UPDATE_ERROR', { error });
+        throw new ApolloError('Error updating notification', 'NOTIFICATION_UPDATE_ERROR', { error });
       }
-    },
-  },
+    },  },
   
 };
 

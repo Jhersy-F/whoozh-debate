@@ -15,6 +15,16 @@ const typeDefs = gql`
     updatedAt: String
    
   }
+
+  type PaginatedUsers {
+    users: [User!]!
+    totalCount: Int!
+    page: Int!
+    limit: Int!
+    totalPages: Int!
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+  }
   
   type Account{
     id: ID!
@@ -115,7 +125,7 @@ type NotificationCount{
     user: User! 
   }
   type Query {
-    getUsers: [User!]!
+    getUsers(page: Int, limit: Int): PaginatedUsers!
     getUserByID(id:String!) :User
     getAccountByID(userID:String!): Account
     getAllPost(userID:String!): [Post!]!
