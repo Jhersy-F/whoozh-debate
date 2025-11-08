@@ -1,0 +1,9 @@
+[
+    {
+      "origin": ["http://localhost:3000", "https://whoozhcom.netlify.app"],
+      "responseHeader": ["Content-Type"],
+      "method": ["GET", "HEAD", "OPTIONS"],
+      "maxAgeSeconds": 3600
+    }
+  ]
+  

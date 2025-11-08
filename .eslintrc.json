@@ -1,0 +1,32 @@
+{
+  /*"extends": [
+    "next/core-web-vitals", "next/typescript"
+    
+  ]*/
+  
+    "parser": "@typescript-eslint/parser",
+    "plugins": ["@typescript-eslint", "react", "react-hooks"],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:react/recommended",
+      "plugin:react-hooks/recommended",
+      "next/core-web-vitals", "next/typescript"
+    ],
+    "rules": {
+      "react/prop-types": "off", //  Not needed in TypeScript
+      "@typescript-eslint/explicit-function-return-type": "off", //  Allow type inference
+      "@typescript-eslint/no-empty-interface": "off",  //  IMPORTANT:  Disable this rule
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-empty-object-type":"off",
+      "@typescript-eslint.io/rules/no-unused-vars":"off"
+    },
+    "settings": {
+      "react": {
+        "version": "detect"
+      }
+    }
+  
+  
+}
