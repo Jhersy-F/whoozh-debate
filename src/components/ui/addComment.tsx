@@ -23,7 +23,7 @@ export default function AddComment({postID,userid}:{postID:string,userid:string}
           const fetchData = async () => {
             if(userID){
               const joined = await getJoinedByUserID(userID, postID);
-              setChoice(joined?.choice ?? null);
+              setChoice(joined?.choice ?? "");
             }
            
       
@@ -79,7 +79,7 @@ export default function AddComment({postID,userid}:{postID:string,userid:string}
     };
     const handleComment = async() =>{
       const data = await genrateAudio();
-      const audioUrl = data ? data.audioUrl : "";
+      const audioUrl = data ? data.audioUrl : " ";
        console.log(data);
        dispatch(setLoading(true))
     
@@ -90,34 +90,22 @@ export default function AddComment({postID,userid}:{postID:string,userid:string}
           },
           body: JSON.stringify({
               query: `
-                  mutation {
-                  mutation AddComment(
-                      $userID: ID, 
-                      $postID: ID!, 
-                      $comment: String!, 
-                      $type: String,
-                      $audioUrl: String
-                  ) {
-                      addComment(
-                          userID: "${userID}", 
-                          postID: "${postID}", 
-                          comment: "${text}", 
-                          type: "${choice}",
-                          audioUrl: "${audioUrl}"
-                      
-                          userID: $userID, 
-                          postID: $postID, 
-                          comment: $comment, 
-                          type: $type,
-                          audioUrl: $audioUrl
-                      ) {
-                          id
-                          userID
-                          postID
-                          comment
-                          type
-                          audioUrl
-                      }
+                mutation AddComment(
+                    $userID: ID!, 
+                    $postID: ID!, 
+                    $comment: String!, 
+                    $type: String!,
+                    $audioUrl: String!
+                ) {
+                    addComment(
+                        userID: $userID, 
+                        postID: $postID, 
+                        comment: $comment, 
+                        type: $type,
+                        audioUrl: $audioUrl
+                    ) {
+                        id
+                    }
                   }
               `,
               variables: {
@@ -125,7 +113,7 @@ export default function AddComment({postID,userid}:{postID:string,userid:string}
                 postID,
                 comment: text,
                 type: choice,
-                audioUrl
+                audioUrl:audioUrl
               }
           }),
       });
@@ -136,43 +124,26 @@ export default function AddComment({postID,userid}:{postID:string,userid:string}
         dispatch(setLoading(false))
         setText("")
        }
-      await fetch('http://localhost:3000/api/graphql', {
+      await fetch('/api/graphql', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
             query: `
-                mutation {
-                        addNotification(
-                        recipientID: "${userID}",
-                        initiatorID:"${userid}", 
-                        postID: "${postID}", 
-                        description:"Commented to your Debate",
-                        is_seen:false
-                     
-                    ) {
-                        id
-                        recipientID
-                        initiatorID
-                        postID
-                        description
-                        is_seen
-                        
-                    }
                 mutation AddNotification(
                     $recipientID: ID,
                     $initiatorID: ID!,
                     $postID: ID!,
                     $description: String!,
-                    $is_seen: Boolean!
+                    $isSeen: Boolean!
                 ) {
                     addNotification(
-                    recipientID: $recipientID,
-                    initiatorID: $initiatorID, 
-                    postID: $postID, 
-                    description: $description,
-                    is_seen: $is_seen
+                        recipientID: $recipientID,
+                        initiatorID: $initiatorID, 
+                        postID: $postID, 
+                        description: $description,
+                        is_seen: $isSeen
                  ) {
                     id
                   }
@@ -180,11 +151,11 @@ export default function AddComment({postID,userid}:{postID:string,userid:string}
                 }
             `,
             variables: {
-                recipientID: userID,
-                initiatorID: userid,
-                postID: postID,
+                recipientID: userid, // Should this be the post owner's ID?
+                initiatorID: userID, // The person commenting
+                postID,
                 description: "Commented to your Debate",
-                is_seen: false
+                isSeen: false
             }
         }),
     });

@@ -95,7 +95,7 @@ export default function AudioPlayer({audio}:{audio:string}) {
                   </div>
                   <div className="flex items-center gap-2">
                     
-                   <audio ref={audioRef} src={`/audios/${audio}`} />
+                   <audio ref={audioRef} src={`${audio}`} />
                   </div>
             </div>
   )

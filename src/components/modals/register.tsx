@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,19 +94,20 @@ export default function Component() {
   const show = useSelector((state: RootState) => state.modalSlice.showmodal);
 
   // handle closing the modal when clicking around it
-  const handleOutsideClick = (e: MouseEvent) => {
+  const handleOutsideClick = useCallback((e: MouseEvent) => {
     const target = e.target as Element;
     if (!target.closest('#modal')) {
       dispatch(closeModal());
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
+    if (!show || modalname !== 'register') return;
     document.addEventListener('click', handleOutsideClick);
     return () => {
       document.removeEventListener('click', handleOutsideClick);
     };
-  }, );
+  }, [show, modalname, handleOutsideClick]);
 
   return (
     <div

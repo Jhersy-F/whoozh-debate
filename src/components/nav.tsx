@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image  from "next/image";
 import Link from 'next/link';
 import { getNotificationByUser } from "@/hooks/useFetchData"
@@ -32,21 +32,21 @@ const Nav = () => {
       },
       body: JSON.stringify({
           query: `
-              mutation {
+              mutation updateNotif($id: String!, $is_seen: Boolean!) {
                   updateNotif(
-                      id: "${id}", 
-                      is_seen:true, 
-                   
-                  
-                  
+                      id: $id, 
+                      is_seen:$is_seen, 
                   ) {
                       id
                       is_seen
                    
-                    
                   }
               }
           `,
+          variables:{
+            id,
+            is_seen:true,
+          }
       }),
   });
     await updateNotif.json();
@@ -58,19 +58,19 @@ const Nav = () => {
     setIsMenuOpen(!isMenuOpen);
   }
   const [isNotifOpen, setIsNotifOpen] = useState(false)
- const handleOutsideClick = (e: MouseEvent) => {
+ const handleOutsideClick = useCallback((e: MouseEvent) => {
     const target = e.target as Element;
     if (!target.closest('#modal')) {
       setIsNotifOpen(false)
     }
-  };
+  }, []);
 
    useEffect(() => {
     const getNotif = async () => {
       const userID = session?.user?.id;   
       
       if(userID){
-        router.push('/pages/homepage');
+     
         const notif = await getNotificationByUser(userID);
         
         setNotif(notif.notification)
@@ -88,7 +88,7 @@ const Nav = () => {
         document.removeEventListener('click', handleOutsideClick);
       };
     
-    }, [isNotifOpen,session,router]);
+    }, [isNotifOpen,session,router,handleOutsideClick]);
  
   return (
     <nav className="bg-gray-900 text-white p-6 border-b border-gray-300 sticky top-0 left-0 right-0 z-10 w-screen">

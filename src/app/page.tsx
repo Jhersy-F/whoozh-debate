@@ -6,10 +6,14 @@ import {  useDispatch } from 'react-redux';
 import { showModal} from '../GlobalRedux/Features/showModalSlice';
 import { useEffect } from "react";
 import  Image  from 'next/image'
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 export default function Landingpage() {
 
  
   const dispatch = useDispatch();
+  const router = useRouter();
+ const { data: session } = useSession();
   const handleShowModal = (modalname:string)=>{
     dispatch(showModal({modalname:modalname}));
     
@@ -18,10 +22,13 @@ export default function Landingpage() {
   }
   
     useEffect(() => {
-      
-        localStorage.removeItem('userID');
+       
+        const userID = session?.user?.id;
+        if(userID){
+        router.push('/pages/homepage')
+      }
     
-      }, []);
+      }, [ session,router]);
   return (
     <div className="flex min-h-screen bg-gray-900 text-white">
       <div className="flex flex-1 flex-col justify-center px-6 py-12 lg:px-8">

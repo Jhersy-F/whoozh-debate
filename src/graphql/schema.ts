@@ -151,7 +151,7 @@ type NotificationCount{
     addUser (firstname: String!,lastname:String!, email: String!): User!
     addAccount (userID: ID!, provider: String, providerAccountID: String, password: String, image: String): Account
     addPost(userID:String!, content:String!, pros:String!, cons:String!): Post 
-    addComment(userID:String!,postID:String!, comment:String!, type:String!, audioUrl:String!): Comment
+    addComment(userID:ID!,postID:ID!, comment:String!, type:String!, audioUrl:String!): Comment
     addChoice(userID:String!,postID:String!, choice:String!): Choice
     addJoined(userID:String!,postID:String!, choice:String!, status:String!): Joined
     addReaction(userID:String!,commentID:String!,reactionType:String): Reaction

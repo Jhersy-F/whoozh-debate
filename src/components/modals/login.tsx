@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import { SignInSchema } from '@/lib/validations'
 import { signInWithCredentials } from '@/lib/actions/auth.action';
 import { useToast } from '@/hooks/use-toast';
 export default function Login() {
-  const [error, setError] = useState('');
+  const [error] = useState('');
   const dispatch = useDispatch();
   const router = useRouter();
   const { toast } = useToast()
@@ -63,20 +63,20 @@ const showErrorToast = () => {
   };
 
   // handle closing the modal when clicking around it
-  const handleOutsideClick = (e: MouseEvent) => {
+  const handleOutsideClick = useCallback((e: MouseEvent) => {
     const target = e.target as Element;
     if (!target.closest('#modal')) {
       dispatch(closeModal());
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
-   
+    if (!show || modalname !== 'login') return;
     document.addEventListener('click', handleOutsideClick);
     return () => {
       document.removeEventListener('click', handleOutsideClick);
     };
-  }, );
+  }, [show, modalname, handleOutsideClick]);
 
   return (
     <Suspense fallback={<p>Loading home...</p>}>

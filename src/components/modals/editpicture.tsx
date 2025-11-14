@@ -68,7 +68,7 @@ export default function EditPicture()  {
     try {
 
      // 1. Get the signed URL from your Next.js API route
-     const savingResponse = await fetch('/api/generate-upload-url', {
+     const savingResponse = await fetch('/api/upload-image', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useSelector, useDispatch } from 'react-redux';
@@ -15,7 +15,7 @@ export default function Choices({postID, question, pros, cons,userid }:{postID:s
  
   const modalname = useSelector((state: RootState)=>state.modalSlice.modalname)
   const showModal = useSelector((state: RootState)=>state.modalSlice.showmodal)
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const userID = session?.user?.id;
   useEffect(()=>{
 
@@ -57,8 +57,8 @@ export default function Choices({postID, question, pros, cons,userid }:{postID:s
       }),
   });
   const is_seen = false
-  const addNotif = await fetch('http://localhost:3000/api/graphql', {
-    method: 'POST',
+  const addNotif = await fetch('/api/graphql', 
+    {    method: 'POST',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -66,8 +66,8 @@ export default function Choices({postID, question, pros, cons,userid }:{postID:s
         query: `
             mutation {
                     addNotification(
-                    recipientID: "${userID}",
-                    initiatorID:"${userid}", 
+                    recipientID: "${userid}",
+                    initiatorID:"${userID}", 
                     postID: "${postID}", 
                     description:"Joined your Debate",
                     is_seen:${is_seen}
@@ -99,19 +99,20 @@ export default function Choices({postID, question, pros, cons,userid }:{postID:s
   }
 
  // handle closing the modal when clicking around it 
-  const handleOutsideClick = (e: MouseEvent) => {
+  const handleOutsideClick = useCallback((e: MouseEvent) => {
     const target = e.target as Element;
     if (!target.closest('#modal')) {
       dispatch(closeModal());
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
+    if(!showModal || modalname !== "joindebate") return;
     document.addEventListener('click', handleOutsideClick);
     return () => {
       document.removeEventListener('click', handleOutsideClick);
     };
-  }, );
+  }, [showModal, modalname, handleOutsideClick]);
 
   return (
     <div className={`${showModal&&modalname==="joindebate"?"flex":"hidden"}  fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50`}>
