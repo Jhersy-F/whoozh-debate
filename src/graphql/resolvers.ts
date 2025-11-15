@@ -552,12 +552,12 @@ const resolvers = {
       }: 
       { 
         firstname: string; 
-        lastname:string; 
-        email: string ;
-        location: string;
-        work: string;
-        contact: string;
-        avatar: string;
+        lastname: string; 
+        email: string;
+        location?: string;
+        work?: string;
+        contact?: string;
+        avatar?: string;
       }) => {
       const existingUser  = await User.findOne({ email });
         if (existingUser ) {
@@ -565,7 +565,15 @@ const resolvers = {
             invalidArgs: { email },
           });
       }
-      const newUser  = new User({ firstname,lastname, email,  location, work, contact, avatar});
+      const newUser  = new User({ 
+        firstname,
+        lastname, 
+        email,
+        ...(location && { location }),
+        ...(work && { work }),
+        ...(contact && { contact }),
+        ...(avatar && { avatar })
+      });
       await newUser.save();
 
       return newUser ;

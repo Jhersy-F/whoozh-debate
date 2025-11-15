@@ -148,7 +148,7 @@ export default function CommentCard({ firstname, lastname, comment, time, commen
           // Handle form submission logic here
         }
         return (
-            <Card className={`${type=="pros"?"bg-[#416F5F]":"bg-[#6F4141]"}`}>
+            <Card className={`${type=="pros"?"bg-[#416F5F]":"bg-[#6F4141]"} flex-1`}>
             <div className="p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6">

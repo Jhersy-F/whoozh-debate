@@ -46,9 +46,10 @@ export default function Component() {
     showSuccessToast()
     //const addUser = 
     const result = await createUser(data);
-
+  
     if (result.errors) {
-      setMessage('Email already exists');
+      setMessage(result.errors[0].message);
+      console.log(result.errors);
     } else {
      // setMessage('User created successfully!');
       userId = result.data.addUser.id;

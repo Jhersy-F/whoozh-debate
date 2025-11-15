@@ -10,18 +10,16 @@ const result = await fetch('/api/graphql', {
   },
   body: JSON.stringify({
     query: `
-      mutation AddUser($email: String!, $firstname: String!, $lastname: String!, $location: String!, $work: String!, $contact: String!, $avatar: String!) {
+      mutation AddUser($email: String!, $firstname: String!, $lastname: String!) {
         addUser(
           email: $email,
           firstname: $firstname,
-          lastname: $lastname,
-        
+          lastname: $lastname
         ) {
           id
           email
           firstname
           lastname
-         
         }
       }
     `,
@@ -29,7 +27,6 @@ const result = await fetch('/api/graphql', {
       email: data.email,
       firstname: data.firstname,
       lastname: data.lastname,
-    
     }
   }),
 })       ;
@@ -38,7 +35,7 @@ const result = await fetch('/api/graphql', {
         if (!result.ok) {
             const errorMessage = `HTTP Error ${result.status}: ${result.statusText}`;
             console.error('HTTP Error in createUser:', errorMessage);
-            throw new Error(errorMessage);
+            return { errors: [{ message: errorMessage }] };
         }
 
         // Safely parse JSON
@@ -48,20 +45,15 @@ const result = await fetch('/api/graphql', {
         } catch (parseError) {
             const errorMessage = 'Failed to parse JSON response';
             console.error('JSON Parse Error in createUser:', parseError);
-            throw new Error(errorMessage);
+            return { errors: [{ message: errorMessage }] };
         }
 
-        // Check for GraphQL errors
-        if (json.errors && json.errors.length > 0) {
-            const errorMessage = `GraphQL Error: ${json.errors.map((err: any) => err.message).join(', ')}`;
-            console.error('GraphQL Error in createUser:', json.errors);
-            throw new Error(errorMessage);
-        }
-
-        return json.data;
+        // Return the full response (which may include errors or data)
+        return json;
     } catch (error) {
         console.error('Error in createUser function:', error);
-        throw error;
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        return { errors: [{ message: errorMessage }] };
     }
 } 
 
