@@ -34,7 +34,7 @@ async function dbConnect() {
   // If connecting, wait for the promise
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false,
+      bufferCommands: true, // Temporarily allow buffering while IP is not whitelisted
     };
 
     cached.promise = mongoose.connect(MONGODB_URI as string, opts)

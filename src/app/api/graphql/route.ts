@@ -1,5 +1,6 @@
 import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
+import { NextRequest } from 'next/server';
 
 import typeDefs from '@/graphql/schema';
 import resolvers from '@/graphql/resolvers';
@@ -9,7 +10,7 @@ import dbConnect from '@/utils/dbConnect';
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  //persistedQueries: false,
+  introspection: true, // Enable GraphQL Playground in development
 });
 
 // This is the new way to create a Next.js handler with Apollo.
@@ -17,7 +18,11 @@ const server = new ApolloServer({
 const handler = startServerAndCreateNextHandler(server, {
   context: async (req, res) => {
     // Connect to the database here
-    await dbConnect();
+    try {
+      await dbConnect();
+    } catch (error) {
+      console.error('Database connection failed:', error);
+    }
     // Return the request and response as context
     return { req, res };
   },

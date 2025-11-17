@@ -1,9 +1,8 @@
 'use client'
 
 import React, { useEffect , useState } from 'react';
-import { PencilIcon } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"
-import { X, Eye, EyeOff } from "lucide-react"
+import { X, Eye, EyeOff, PencilIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,13 +13,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ResetPassword } from '@/lib/validations';
 import * as z from 'zod';
-import bcrypt from 'bcrypt';
 import { useToast } from '@/hooks/use-toast';
 import { useSession } from 'next-auth/react';
+
 export default function EditPassword() {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const userID = session?.user?.id;
-    const isLoading = status === 'loading';    
     const dispatch = useDispatch();
     const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
     const [showConfirm, setShowConfirm] = useState(false);
@@ -119,10 +117,7 @@ export default function EditPassword() {
     const onSubmit = async (data: z.infer<typeof ResetPassword>) => {
      
       if (!userID) return; // Exit if userID is not set
-        // Hash the password
-        const salt = bcrypt.genSaltSync(10);
-        const hashedPassword = bcrypt.hashSync(data.password, salt);
-        const response = await fetch('http://localhost:3000/api/graphql', {
+        const response = await fetch('/api/graphql', {
           method: 'POST',
           headers: {
             'Content-Type':'application/json',
@@ -131,9 +126,8 @@ export default function EditPassword() {
             query: `
               mutation {
                 resetPassword(
-                  userID: "${userID}"
-                  password:"${hashedPassword}"
-                 
+                  userID: "${userID}",
+                  password: "${data.password}"
                 ) {
                   id
                   userID
