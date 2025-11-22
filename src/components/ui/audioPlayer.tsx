@@ -61,22 +61,22 @@ export default function AudioPlayer({audio}:{audio:string}) {
     }
   }
   return (
-    <div className="rounded-lg p-4 space-y-2">
+    <div className="rounded-lg  space-y-1">
                     
-               <div className="flex items-center gap-4">
+               <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-10 w-10 rounded-full bg-white/10 hover:bg-white/20"
+                    className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20"
                     onClick={togglePlay}
                   >
                     {isPlaying ? (
-                      <div className="rounded-[100%] bg-black white h-8 w-8 text-justify text-white">
-                      <Pause className="h-4 w-4 mt-2 ml-2"  />
+                      <div className="rounded-[100%] white h-4 w-4 text-justify text-white">
+                      <Pause className="h-4 w-4 "  />
                       </div>
                     ) : (
-                      <div className="rounded-[100%] bg-black white h-8 w-8 text-justify text-white">
-                      <Play className="h-4 w-4 mt-2 ml-2" />
+                      <div className="rounded-[100%] white h-4 w-4 text-justify text-white">
+                      <Play className="h-4 w-4 " />
                 
                     </div>
                     )}
@@ -88,7 +88,10 @@ export default function AudioPlayer({audio}:{audio:string}) {
                           max={duration || 100}
                           step={0.1}
                           onValueChange={handleProgressChange}
-                          className="cursor-pointer"
+                          className="cursor-pointer h-[1px]"
+                          rangeClassName="bg-white"
+                          trackClassName="bg-white/30"
+                          thumbClassName="h-3 w-3"
                         />
                       </div>
                 

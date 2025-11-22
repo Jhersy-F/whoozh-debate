@@ -51,7 +51,7 @@ const DebateroomContent=() =>{
 
   const handleLeave = async() =>{
     try {
-      const addUser = await fetch('http://localhost:3000/api/graphql', {
+      const addUser = await fetch('/api/graphql', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -236,7 +236,7 @@ const DebateroomContent=() =>{
   
             {/* Comments Section */}
             <div className="grid lg:grid-cols-6 gap-4 overflow-y-scroll h-[450px]">
-              <div className = {`${isGreenActive?"":"md:hidden hidden"} lg:block space-y-4 md:col-span-4 lg:col-span-2 min-[320px]:col-span-4  h-full`} >
+              <div className = {`${isGreenActive?"":"md:hidden hidden"} lg:block space-y-4 md:col-span-4 lg:col-span-2 min-[320px]:col-span-4  `} >
                 {/* Green Comments */}
                 {
                   prosComments && prosComments.length > 0 && prosComments.map((comment,index:number) =>(
@@ -260,7 +260,7 @@ const DebateroomContent=() =>{
                </div>   
   
             
-                <div className = {`${isGreenActive?"md:hidden hidden":""} lg:block space-y-4 md:col-span-4 lg:col-span-2 min-[320px]:col-span-4`} >
+                <div className = {`${isGreenActive?"md:hidden hidden":""} lg:block space-y-4 md:col-span-4 lg:col-span-2 min-[320px]:col-span-4 `} >
                       {
                             
                         consComments && consComments.length > 0 && consComments.map((comment,index:number) =>(

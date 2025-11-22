@@ -148,10 +148,10 @@ export default function CommentCard({ firstname, lastname, comment, time, commen
           // Handle form submission logic here
         }
         return (
-            <Card className={`${type=="pros"?"bg-[#416F5F]":"bg-[#6F4141]"} flex-1`}>
-            <div className="p-4 space-y-3">
+            <Card className={`${type=="pros"?"bg-gray-900 border-1 border-[#00783E] border-solid":" bg-gray-900 border-1 border-[#6F4141] border-solid"} flex flex-col card-modern p-6 rounded-2xl border transition-all duration-300`}>
+            <div className=" space-y-3">
               <div className="flex items-center gap-2">
-                <Avatar className="h-6 w-6">
+                <Avatar className="h-8 w-8">
                   <AvatarImage src="/placeholder.svg" alt="Jhersy Fernandez" />
                   <AvatarFallback>JF</AvatarFallback>
                 </Avatar>
@@ -160,7 +160,7 @@ export default function CommentCard({ firstname, lastname, comment, time, commen
                   <span className="text-xs text-gray-400">{timeAgo(time)}</span>
                 </div>
               </div>
-              <p className="text-sm text-white">
+              <p className="text-sm text-white flex-1">
                 {comment}
               </p>
               <AudioPlayer audio={audioUrl}/>

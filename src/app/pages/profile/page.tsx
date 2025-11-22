@@ -49,7 +49,7 @@ useEffect(() => {
         });
      
         const result = await response.json();
-        console.log(result.data.getUserByID.avatar)
+     
         if (result.data) {
           setProfile(result.data.getUserByID);
         }
